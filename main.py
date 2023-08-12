@@ -1,9 +1,8 @@
 from functools import lru_cache
 from fastapi import FastAPI
-from tortoise import run_async
+from src.config.models import OpenPkPsNode, Pg03OpenPkPsCsFinal
 from src.config.settings import Settings
 from src.config.database import init, close
-from src.model.pg03_open_pk_ps_cs_final import Pg03OpenPkPsCsFinal
 
 app = FastAPI()
 
@@ -31,4 +30,10 @@ async def root():
 @app.get("/demo")
 async def demo():
     list = await Pg03OpenPkPsCsFinal.all().values()
+    return list
+
+
+@app.get("/demo2")
+async def demo():
+    list = await OpenPkPsNode.all().values()
     return list

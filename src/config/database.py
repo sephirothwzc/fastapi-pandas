@@ -12,7 +12,7 @@ logging.getLogger('tortoise').setLevel(logging.DEBUG)
 async def init(settings: Settings):
     await Tortoise.init(
         db_url=settings.db_url,
-        modules={'models': ['src.model.pg03_open_pk_ps_cs_final']},
+        modules={'models': ['src.config.models']},
     )
     # await Tortoise.generate_schemas()
 
