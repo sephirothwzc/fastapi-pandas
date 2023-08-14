@@ -1,8 +1,12 @@
 from functools import lru_cache
+import json
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+import pandas as pd
 from src.config.models import OpenPkPsNode, Pg03OpenPkPsCsFinal
 from src.config.settings import Settings
 from src.config.database import init, close
+from src.service.data_pandas import unpivot_columns, unpivotPg03OpenPkPsCsFinal
 
 app = FastAPI()
 
@@ -34,6 +38,5 @@ async def demo():
 
 
 @app.get("/demo2")
-async def demo():
-    list = await OpenPkPsNode.all().values()
-    return list
+async def demo2():
+    return await unpivotPg03OpenPkPsCsFinal()
