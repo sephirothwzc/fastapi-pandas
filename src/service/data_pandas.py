@@ -5,6 +5,7 @@ from typing import Any, List, Dict
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.service.utils import insert_data, replace_functions, sql_to_data, unpivot_columns
 
 from src.service.snowflake import IdWorker
 
@@ -61,32 +62,35 @@ async def unpivotPg03OpenPkPsCsFinal(session: AsyncSession):
     plan_df = unpivot_columns(
         data_list, id_vars, plan_columns, "plan_finish_dt", "task_name")
 
-    plan_df["task_name"] = plan_df["task_name"].apply(replace_functions)
+    # 使用 replace_functions 函数对 "类型" 列的值进行替换
+    plan_df["task_name"] = plan_df["task_name"].apply(
+        lambda value: replace_functions(value, key_mapping))
 
     # 实际完成时间
     actual_df = unpivot_columns(
         data_list, id_other, actual_columns, "real_finish_dt", "task_name")
 
-    actual_df["task_name"] = actual_df["task_name"].apply(replace_functions)
+    actual_df["task_name"] = actual_df["task_name"].apply(
+        lambda value: replace_functions(value, key_mapping))
 
     # 计划完成绝对工期
     duration_df = unpivot_columns(
         data_list, id_other, duration_columns, "plan_finish_duration", "task_name")
 
     duration_df["task_name"] = duration_df["task_name"].apply(
-        replace_functions)
+        lambda value: replace_functions(value, key_mapping))
     # 实际完成绝对工期
     real_duration_df = unpivot_columns(
         data_list, id_other, real_duration_columns, "real_finish_duration", "task_name")
 
     real_duration_df["task_name"] = real_duration_df["task_name"].apply(
-        replace_functions)
+        lambda value: replace_functions(value, key_mapping))
     # 偏差
     deviation_df = unpivot_columns(
         data_list, id_other, deviation_columns, "deviation", "task_name")
 
     deviation_df["task_name"] = deviation_df["task_name"].apply(
-        replace_functions)
+        lambda value: replace_functions(value, key_mapping))
     # endregion
 
     # # 合并两个DataFrame
@@ -111,51 +115,3 @@ async def unpivotPg03OpenPkPsCsFinal(session: AsyncSession):
     result_json = merged_df.to_json(orient="records")
 
     return json.loads(result_json)
-
-
-# region 公共方法
-# 异步查询sql
-async def sql_to_data(sqlQuery: str, session: AsyncSession):
-    result = await session.execute(text(sqlQuery))
-    rows = result.fetchall()
-
-    # 将结果转换为列表
-    data = [row._asdict() for row in rows]
-
-    return data
-
-# 异步插入数据
-
-
-async def insert_data(table_name: str, data_df, session: AsyncSession):
-    for _, row in data_df.iterrows():
-        values = ", ".join([f":{col}" for col in data_df.columns])
-        insert_statement = text(
-            f"INSERT INTO {table_name} ({', '.join(data_df.columns)}) VALUES ({values})")
-        await session.execute(insert_statement, params=row.to_dict())
-
-# 行列转换
-
-
-def unpivot_columns(data_list: List[Dict[str, Any]], id_vars: List[str], columns: List[str],
-                    target_name: str, var_name: str) -> pd.DataFrame:
-
-    df = pd.DataFrame.from_records(data_list)
-
-    unpivoted_df = pd.melt(df, id_vars=id_vars,
-                           value_vars=columns,
-                           var_name=var_name, value_name=target_name)
-
-    return unpivoted_df
-
-# 替换映射
-
-
-def replace_functions(value: str):
-    for key, replacement in key_mapping.items():
-        if value.find(key) != -1:
-            return replacement
-
-    return value
-
-# endregion
