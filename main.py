@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from src.service.settings import Settings
-from src.service.data_pandas import unpivotPg03OpenPkPsCsFinal
+from src.service.data_pandas import pivot_v_stage_product_constitute, unpivotPg03OpenPkPsCsFinal
 
 app = FastAPI()
 
@@ -34,3 +34,8 @@ async def root():
 @app.get("/pg03")
 async def pg03(session: AsyncSession = Depends(get_async_session)):
     return await unpivotPg03OpenPkPsCsFinal(session)
+
+
+@app.get("/view")
+async def pivot_v_stage(project_guid: str, stage_guid: str, session: AsyncSession = Depends(get_async_session)):
+    return await pivot_v_stage_product_constitute(session, project_guid, stage_guid)

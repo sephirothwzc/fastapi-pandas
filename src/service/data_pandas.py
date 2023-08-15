@@ -1,11 +1,9 @@
 # data_pandas.py
 
 import json
-from typing import Any, List, Dict
 import pandas as pd
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.service.utils import insert_data, replace_functions, sql_to_data, unpivot_columns
+from src.service.utils import insert_data, pivot_columns, replace_functions, sql_to_data, unpivot_columns
 
 from src.service.snowflake import IdWorker
 
@@ -20,8 +18,13 @@ key_mapping = {
 }
 
 
-# 行列转换
 async def unpivotPg03OpenPkPsCsFinal(session: AsyncSession):
+    """
+    从数据库查询指定项目和阶段的产品构成数据，并进行行转列操作。
+
+    :param session: 数据库会话对象（异步会话）。
+    :return: json
+    """
     query = "SELECT * FROM pg03_open_pk_ps_cs_final"
     data_list = await sql_to_data(query, session)
 
@@ -113,5 +116,38 @@ async def unpivotPg03OpenPkPsCsFinal(session: AsyncSession):
 
     # 将合并后的DataFrame转换成JSON
     result_json = merged_df.to_json(orient="records")
+
+    return json.loads(result_json)
+
+
+async def pivot_v_stage_product_constitute(session: AsyncSession, project_guid: str, stage_guid: str):
+    """
+    行转列
+
+    从数据库查询指定项目和阶段的产品构成数据，并进行行转列操作。
+
+    :param session: 数据库会话对象（异步会话）。
+    :param project_guid: 项目的全局唯一标识符。
+    :param stage_guid: 阶段的全局唯一标识符。
+    :return: 转换后的数据列表，包含产品构成数据的行转列结果。
+    """
+    query_sql = "SELECT * FROM v_stage_product_constitute WHERE project_guid = :project_guid AND stage_guid = :stage_guid"
+    params = {"project_guid": project_guid, "stage_guid": stage_guid}
+    data_list = await sql_to_data(query_sql, session, params)
+
+    id_vars = ["project_guid"]
+    columns = ["secondaryproduct_type"]
+    values = ["mj"]
+
+    df = pd.DataFrame.from_records(data_list)
+
+    mj_df = pivot_columns(data_list=data_list, id_vars=id_vars,
+                          columns=columns, values=values)
+    # 行列转换
+
+    # .rename_axis(columns=None).reset_index()
+    print(mj_df)
+    # 将合并后的DataFrame转换成JSON
+    result_json = mj_df.to_json(orient="records")
 
     return json.loads(result_json)
