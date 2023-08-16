@@ -139,14 +139,15 @@ async def pivot_v_stage_product_constitute(session: AsyncSession, project_guid: 
     columns = ["secondaryproduct_type"]
     values = ["mj", "ts", "totalvalue", "wshzjj"]
 
-    df = pd.DataFrame.from_records(data_list)
-
+    # 行转列 生成二维表头 不重构索引
     mj_df = pivot_table_columns(data_list=data_list, id_vars=id_vars,
-                                columns=columns, values=values).reset_index()
+                                columns=columns, values=values)
 
-    mj_df.columns = mj_df.columns.map('_'.join)
+    # 宽表变长表 stack 降级 重构索引
+    mj_df = mj_df.stack(level=0).reset_index()
+    # 列转行
+    # ========
 
-    # .rename_axis(columns=None).reset_index()
     print(mj_df)
     # 将合并后的DataFrame转换成JSON
     result_json = mj_df.to_json(orient="records")
