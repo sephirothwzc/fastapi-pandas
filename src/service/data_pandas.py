@@ -155,7 +155,8 @@ async def pivot_v_stage_product_constitute(session: AsyncSession, project_guid: 
     return json.loads(result_json)
 
 
-async def data_demo(session: AsyncSession):
+async def data_demo(session: AsyncSession) -> pd.DataFrame:
     query = "SELECT * FROM pg03_open_pk_ps_cs_final"
     data_list = await sql_to_data(query, session)
-    return pd.DataFrame(data_list)
+    df = pd.DataFrame(data_list)
+    return df

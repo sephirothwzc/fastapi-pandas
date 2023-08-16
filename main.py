@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 import pandas as pd
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from src.service.utils import sql_to_data
 from src.service.settings import Settings
 from src.service.data_pandas import data_demo, pivot_v_stage_product_constitute, unpivotPg03OpenPkPsCsFinal
 import io
@@ -48,9 +49,11 @@ async def pivot_v_stage(project_guid: str, stage_guid: str, session: AsyncSessio
 async def xlsx_response(session: AsyncSession = Depends(get_async_session)):
     # 将 DataFrame 写入 BytesIO 流
     output = io.BytesIO()
-    df = data_demo(session)
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, sheet_name="Sheet1", index=False)
+    query = "SELECT * FROM pg03_open_pk_ps_cs_final"
+    data_list = await sql_to_data(query, session)
+    df = pd.DataFrame(data_list)
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Sheet1')
 
     # 配置 BytesIO 流
     output.seek(0)
