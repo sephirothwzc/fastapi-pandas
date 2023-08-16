@@ -3,7 +3,7 @@
 import json
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.service.utils import insert_data, pivot_columns, replace_functions, sql_to_data, unpivot_columns
+from src.service.utils import insert_data, pivot_columns, pivot_table_columns, replace_functions, sql_to_data, unpivot_columns
 
 from src.service.snowflake import IdWorker
 
@@ -137,13 +137,14 @@ async def pivot_v_stage_product_constitute(session: AsyncSession, project_guid: 
 
     id_vars = ["project_guid"]
     columns = ["secondaryproduct_type"]
-    values = ["mj"]
+    values = ["mj", "ts", "totalvalue", "wshzjj"]
 
     df = pd.DataFrame.from_records(data_list)
 
-    mj_df = pivot_columns(data_list=data_list, id_vars=id_vars,
-                          columns=columns, values=values)
-    # 行列转换
+    mj_df = pivot_table_columns(data_list=data_list, id_vars=id_vars,
+                                columns=columns, values=values).reset_index()
+
+    mj_df.columns = mj_df.columns.map('_'.join)
 
     # .rename_axis(columns=None).reset_index()
     print(mj_df)

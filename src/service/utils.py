@@ -70,7 +70,7 @@ def unpivot_columns(data_list: List[Dict[str, Any]], id_vars: List[str], columns
     return unpivoted_df
 
 
-def pivot_table_columns(data_list: List[Dict[str, Any]], id_vars: Union[str, List[str]], values: Union[str, List[str]], columns: Union[str, List[str]], aggfunc: str):
+def pivot_table_columns(data_list: List[Dict[str, Any]], id_vars: Union[str, List[str]], columns: Union[str, List[str]], values: Union[str, List[str]] = None, aggfunc: str = "mean", fill_value=0):
     """
     行转列 聚合数据
 
@@ -87,11 +87,11 @@ def pivot_table_columns(data_list: List[Dict[str, Any]], id_vars: Union[str, Lis
     df = pd.DataFrame.from_records(data_list)
 
     pivot_df = pd.pivot_table(
-        df, values=values, index=id_vars, columns=columns, aggfunc=aggfunc)
+        df, values=values, index=id_vars, columns=columns, aggfunc=aggfunc, fill_value=fill_value)
     return pivot_df
 
 
-def pivot_columns(data_list: List[Dict[str, Any]], id_vars: Union[str, List[str]], columns: Union[str, List[str]], values: Union[str, List[str]] = None):
+def pivot_columns(data_list: List[Dict[str, Any]], id_vars: Union[str, List[str]], columns: Union[str, List[str]], values: Union[str, List[str]] = None, fill_value=0):
     """
     行转列 聚合数据
 
