@@ -10,7 +10,7 @@
 # 虚拟环境
 $ python3 -m venv fastapienv
 # 激活
-$ source fastapienv/bin/activate
+$ source jitenv/bin/activate
 # 在虚拟环境中安装 FastAPI
 $ pip3 install fastapi
 # 安装 Uvicorn 服务器
